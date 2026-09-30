@@ -1,0 +1,41 @@
+{
+  "name": "@plivor-labs/agent-protocol",
+  "version": "1.0.0",
+  "description": "Versioned protocol boundary between Plivor IDE and Plivor Agent",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": ["dist", "docs", "proposals", "README.md"],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    },
+    "./node": {
+      "types": "./dist/src/node.d.ts",
+      "import": "./dist/src/node.js"
+    },
+    "./schemas/*": "./dist/sdk/python/plivor_agent_protocol/schemas/*"
+  },
+  "scripts": {
+    "prebuild": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "tsc -p tsconfig.json",
+    "type-check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:python": "python -m unittest discover -s sdk/python/tests -v",
+    "verify": "npm run type-check && npm test && npm run test:python && npm run build"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "UNLICENSED",
+  "packageManager": "npm@10.9.2"
+}

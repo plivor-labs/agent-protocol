@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plivor-agent-protocol"
+version = "1.0.0"
+description = "Versioned protocol boundary between Plivor IDE and Plivor Agent"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["jsonschema>=4.23"]
+license = "LicenseRef-Proprietary"
+authors = [{ name = "Plivor Labs" }]
+
+[tool.setuptools]
+package-dir = { "" = "sdk/python" }
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["sdk/python"]
+exclude = ["tests*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+plivor_agent_protocol = ["py.typed", "schemas/v1/*.json"]

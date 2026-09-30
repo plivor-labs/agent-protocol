@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://protocol.plivor.dev/v1/common.schema.json",
+  "title": "Plivor Agent Protocol common DTOs",
+  "$defs": {
+    "jsonValue": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "boolean" },
+        { "type": "number" },
+        { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/$defs/jsonValue" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/jsonValue" } }
+      ]
+    },
+    "emptyObject": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "protocolVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "requestId": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "integer" }
+      ]
+    },
+    "position": {
+      "type": "object",
+      "required": ["line", "character"],
+      "properties": {
+        "line": { "type": "integer", "minimum": 0 },
+        "character": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "range": {
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "$ref": "#/$defs/position" },
+        "end": { "$ref": "#/$defs/position" }
+      },
+      "additionalProperties": false
+    },
+    "location": {
+      "type": "object",
+      "required": ["uri", "range"],
+      "properties": {
+        "uri": { "type": "string", "minLength": 1 },
+        "range": { "$ref": "#/$defs/range" }
+      },
+      "additionalProperties": false
+    },
+    "textDocument": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": { "type": "string", "minLength": 1 },
+        "languageId": { "type": "string" },
+        "version": { "type": "integer" },
+        "text": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "textEdit": {
+      "type": "object",
+      "required": ["range", "newText"],
+      "properties": {
+        "range": { "$ref": "#/$defs/range" },
+        "newText": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "workspaceEdit": {
+      "type": "object",
+      "required": ["changes"],
+      "properties": {
+        "changes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/textEdit" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rpcError": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "enum": [
+            "METHOD_NOT_FOUND",
+            "INVALID_PARAMS",
+            "VERSION_MISMATCH",
+            "CAPABILITY_NOT_AVAILABLE",
+            "TASK_NOT_FOUND",
+            "TASK_BUSY",
+            "PERMISSION_DENIED",
+            "CANCELLED",
+            "INTERNAL_ERROR"
+          ]
+        },
+        "message": { "type": "string" },
+        "data": { "$ref": "#/$defs/jsonValue" },
+        "requestId": { "$ref": "#/$defs/requestId" }
+      },
+      "additionalProperties": false
+    },
+    "requestEnvelope": {
+      "type": "object",
+      "required": ["jsonrpc", "id", "method", "params"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "id": { "$ref": "#/$defs/requestId" },
+        "method": { "type": "string", "minLength": 1 },
+        "params": { "$ref": "#/$defs/jsonValue" }
+      },
+      "additionalProperties": false
+    },
+    "notificationEnvelope": {
+      "type": "object",
+      "required": ["jsonrpc", "method", "params"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "method": { "type": "string", "minLength": 1 },
+        "params": { "$ref": "#/$defs/jsonValue" }
+      },
+      "additionalProperties": false
+    },
+    "successResponse": {
+      "type": "object",
+      "required": ["jsonrpc", "id", "result"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "id": { "$ref": "#/$defs/requestId" },
+        "result": { "$ref": "#/$defs/jsonValue" }
+      },
+      "additionalProperties": false
+    },
+    "errorResponse": {
+      "type": "object",
+      "required": ["jsonrpc", "id", "error"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "id": { "$ref": "#/$defs/requestId" },
+        "error": { "$ref": "#/$defs/rpcError" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "methods": {
+    "initialize": {
+      "params": { "protocolVersion": "1.0", "clientName": "plivor-ide", "clientVersion": "0.1.0", "capabilities": ["editor.selection"] },
+      "result": { "protocolVersion": "1.0", "agentVersion": "0.1.0", "supportedCapabilities": ["editor.selection"] }
+    },
+    "agent.run": {
+      "params": { "prompt": "Inspect selection" },
+      "result": { "taskId": "task-1", "status": "running" }
+    },
+    "agent.cancel": {
+      "params": { "taskId": "task-1" },
+      "result": { "taskId": "task-1", "status": "cancelled" }
+    },
+    "agent.resume": {
+      "params": { "taskId": "task-1", "input": "continue" },
+      "result": { "taskId": "task-1", "status": "running" }
+    },
+    "agent.getTask": {
+      "params": { "taskId": "task-1" },
+      "result": { "taskId": "task-1", "status": "running", "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:01Z" }
+    },
+    "agent.listTasks": {
+      "params": { "limit": 20 },
+      "result": { "tasks": [] }
+    },
+    "session.create": {
+      "params": { "workspaceUri": "file:///workspace" },
+      "result": { "sessionId": "session-1", "status": "active", "workspaceUri": "file:///workspace", "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z" }
+    },
+    "session.resume": {
+      "params": { "sessionId": "session-1" },
+      "result": { "sessionId": "session-1", "status": "active", "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:01Z" }
+    },
+    "session.close": {
+      "params": { "sessionId": "session-1" },
+      "result": { "sessionId": "session-1", "status": "closed", "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:02Z" }
+    },
+    "ide.getActiveDocument": { "params": {}, "result": null },
+    "ide.getSelection": { "params": {}, "result": { "documentUri": "file:///workspace/main.ts", "range": { "start": { "line": 0, "character": 0 }, "end": { "line": 0, "character": 5 } }, "text": "hello" } },
+    "ide.getOpenDocuments": { "params": {}, "result": { "documents": [{ "uri": "file:///workspace/main.ts", "languageId": "typescript", "version": 1 }] } },
+    "ide.applyWorkspaceEdit": { "params": { "edit": { "changes": { "file:///workspace/main.ts": [{ "range": { "start": { "line": 0, "character": 0 }, "end": { "line": 0, "character": 5 } }, "newText": "HELLO" }] } } }, "result": { "applied": true } },
+    "ide.showDiff": { "params": { "title": "Proposed edit", "beforeText": "hello", "afterText": "HELLO" }, "result": { "shown": true } },
+    "ide.findFiles": { "params": { "glob": "**/*.ts" }, "result": { "uris": ["file:///workspace/main.ts"] } },
+    "ide.searchText": { "params": { "query": "hello" }, "result": { "matches": [{ "uri": "file:///workspace/main.ts", "range": { "start": { "line": 0, "character": 0 }, "end": { "line": 0, "character": 5 } }, "preview": "hello" }] } },
+    "ide.getDefinition": { "params": { "documentUri": "file:///workspace/main.ts", "position": { "line": 0, "character": 1 } }, "result": { "locations": [] } },
+    "ide.getReferences": { "params": { "documentUri": "file:///workspace/main.ts", "position": { "line": 0, "character": 1 }, "includeDeclaration": true }, "result": { "locations": [] } },
+    "ide.getSymbols": { "params": { "documentUri": "file:///workspace/main.ts" }, "result": { "symbols": [] } },
+    "ide.getWorkspaceSymbols": { "params": { "query": "main" }, "result": { "symbols": [] } },
+    "ide.hover": { "params": { "documentUri": "file:///workspace/main.ts", "position": { "line": 0, "character": 1 } }, "result": null },
+    "ide.rename": { "params": { "documentUri": "file:///workspace/main.ts", "position": { "line": 0, "character": 1 }, "newName": "renamed" }, "result": { "changes": {} } },
+    "ide.getDiagnostics": { "params": {}, "result": { "items": [] } },
+    "ide.terminal.create": { "params": { "cwd": "C:/workspace" }, "result": { "terminalId": "terminal-1" } },
+    "ide.terminal.write": { "params": { "terminalId": "terminal-1", "data": "npm test\n" }, "result": { "accepted": true } },
+    "ide.terminal.kill": { "params": { "terminalId": "terminal-1" }, "result": { "killed": true } },
+    "ide.git.status": { "params": {}, "result": { "branch": "main", "entries": [] } },
+    "ide.git.diff": { "params": { "staged": false }, "result": { "diff": "" } }
+  },
+  "events": {
+    "task.started": { "taskId": "task-1", "eventId": "event-1", "sequence": 0, "timestamp": "2026-01-01T00:00:00Z", "payload": { "status": "running" } },
+    "task.updated": { "taskId": "task-1", "eventId": "event-2", "sequence": 1, "timestamp": "2026-01-01T00:00:01Z", "payload": { "status": "running", "message": "Working", "progress": 0.5 } },
+    "task.completed": { "taskId": "task-1", "eventId": "event-3", "sequence": 2, "timestamp": "2026-01-01T00:00:02Z", "payload": { "status": "completed", "result": { "changed": true } } },
+    "task.failed": { "taskId": "task-2", "eventId": "event-4", "sequence": 0, "timestamp": "2026-01-01T00:00:00Z", "payload": { "status": "failed", "error": { "code": "INTERNAL_ERROR", "message": "failed" } } },
+    "task.cancelled": { "taskId": "task-3", "eventId": "event-5", "sequence": 0, "timestamp": "2026-01-01T00:00:00Z", "payload": { "status": "cancelled" } },
+    "tool.started": { "taskId": "task-1", "eventId": "event-6", "sequence": 3, "timestamp": "2026-01-01T00:00:03Z", "payload": { "toolCallId": "tool-1", "toolName": "read", "input": { "path": "main.ts" } } },
+    "tool.output": { "taskId": "task-1", "eventId": "event-7", "sequence": 4, "timestamp": "2026-01-01T00:00:04Z", "payload": { "toolCallId": "tool-1", "output": "content" } },
+    "tool.completed": { "taskId": "task-1", "eventId": "event-8", "sequence": 5, "timestamp": "2026-01-01T00:00:05Z", "payload": { "toolCallId": "tool-1", "result": { "bytes": 7 } } },
+    "tool.failed": { "taskId": "task-1", "eventId": "event-9", "sequence": 6, "timestamp": "2026-01-01T00:00:06Z", "payload": { "toolCallId": "tool-2", "error": { "code": "PERMISSION_DENIED", "message": "denied" } } },
+    "model.started": { "taskId": "task-1", "eventId": "event-10", "sequence": 7, "timestamp": "2026-01-01T00:00:07Z", "payload": { "modelCallId": "model-1", "model": "example-model" } },
+    "model.output": { "taskId": "task-1", "eventId": "event-11", "sequence": 8, "timestamp": "2026-01-01T00:00:08Z", "payload": { "modelCallId": "model-1", "delta": "hello" } },
+    "model.completed": { "taskId": "task-1", "eventId": "event-12", "sequence": 9, "timestamp": "2026-01-01T00:00:09Z", "payload": { "modelCallId": "model-1", "usage": { "inputTokens": 10, "outputTokens": 5 } } },
+    "model.failed": { "taskId": "task-1", "eventId": "event-13", "sequence": 10, "timestamp": "2026-01-01T00:00:10Z", "payload": { "modelCallId": "model-2", "error": { "code": "INTERNAL_ERROR", "message": "provider failed" } } },
+    "agent.statusChanged": { "taskId": "task-1", "eventId": "event-14", "sequence": 11, "timestamp": "2026-01-01T00:00:11Z", "payload": { "status": "idle" } }
+  }
+}
+

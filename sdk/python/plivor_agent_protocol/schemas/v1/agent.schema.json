@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://protocol.plivor.dev/v1/agent.schema.json",
+  "title": "Plivor Agent RPC DTOs",
+  "$defs": {
+    "taskStatus": {
+      "enum": ["queued", "running", "paused", "completed", "failed", "cancelled"]
+    },
+    "task": {
+      "type": "object",
+      "required": ["taskId", "status", "createdAt", "updatedAt"],
+      "properties": {
+        "taskId": { "type": "string", "minLength": 1 },
+        "sessionId": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/taskStatus" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "result": { "$ref": "common.schema.json#/$defs/jsonValue" },
+        "error": { "$ref": "common.schema.json#/$defs/rpcError" }
+      },
+      "additionalProperties": false
+    },
+    "session": {
+      "type": "object",
+      "required": ["sessionId", "status", "createdAt", "updatedAt"],
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["active", "closed"] },
+        "workspaceUri": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/jsonValue" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "agentRunParams": {
+      "type": "object",
+      "required": ["prompt"],
+      "properties": {
+        "prompt": { "type": "string", "minLength": 1 },
+        "sessionId": { "type": "string", "minLength": 1 },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/jsonValue" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "agentRunResult": {
+      "type": "object",
+      "required": ["taskId", "status"],
+      "properties": {
+        "taskId": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/taskStatus" }
+      },
+      "additionalProperties": false
+    },
+    "taskIdParams": {
+      "type": "object",
+      "required": ["taskId"],
+      "properties": { "taskId": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "agentCancelResult": {
+      "type": "object",
+      "required": ["taskId", "status"],
+      "properties": {
+        "taskId": { "type": "string", "minLength": 1 },
+        "status": { "const": "cancelled" }
+      },
+      "additionalProperties": false
+    },
+    "agentResumeParams": {
+      "type": "object",
+      "required": ["taskId"],
+      "properties": {
+        "taskId": { "type": "string", "minLength": 1 },
+        "input": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "agentResumeResult": {
+      "type": "object",
+      "required": ["taskId", "status"],
+      "properties": {
+        "taskId": { "type": "string", "minLength": 1 },
+        "status": { "const": "running" }
+      },
+      "additionalProperties": false
+    },
+    "agentGetTaskResult": { "$ref": "#/$defs/task" },
+    "agentListTasksParams": {
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 1 },
+        "cursor": { "type": "string", "minLength": 1 },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+    "agentListTasksResult": {
+      "type": "object",
+      "required": ["tasks"],
+      "properties": {
+        "tasks": { "type": "array", "items": { "$ref": "#/$defs/task" } },
+        "nextCursor": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "sessionCreateParams": {
+      "type": "object",
+      "properties": {
+        "workspaceUri": { "type": "string" },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/jsonValue" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "sessionIdParams": {
+      "type": "object",
+      "required": ["sessionId"],
+      "properties": { "sessionId": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "sessionCreateResult": {
+      "allOf": [
+        { "$ref": "#/$defs/session" },
+        { "type": "object", "properties": { "status": { "const": "active" } } }
+      ]
+    },
+    "sessionResumeResult": {
+      "allOf": [
+        { "$ref": "#/$defs/session" },
+        { "type": "object", "properties": { "status": { "const": "active" } } }
+      ]
+    },
+    "sessionCloseResult": {
+      "allOf": [
+        { "$ref": "#/$defs/session" },
+        { "type": "object", "properties": { "status": { "const": "closed" } } }
+      ]
+    }
+  }
+}

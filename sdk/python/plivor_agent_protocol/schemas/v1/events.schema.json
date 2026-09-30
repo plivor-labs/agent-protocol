@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://protocol.plivor.dev/v1/events.schema.json",
+  "title": "Plivor streaming event DTOs",
+  "$defs": {
+    "eventBase": {
+      "type": "object",
+      "required": ["taskId", "eventId", "sequence", "timestamp", "payload"],
+      "properties": {
+        "taskId": { "type": "string", "minLength": 1 },
+        "eventId": { "type": "string", "minLength": 1 },
+        "sequence": { "type": "integer", "minimum": 0 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "payload": { "type": "object" }
+      }
+    },
+    "taskStartedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["status"],
+              "properties": { "status": { "const": "running" } },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "taskUpdatedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["status"],
+              "properties": {
+                "status": { "$ref": "agent.schema.json#/$defs/taskStatus" },
+                "message": { "type": "string" },
+                "progress": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "taskCompletedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["status"],
+              "properties": {
+                "status": { "const": "completed" },
+                "result": { "$ref": "common.schema.json#/$defs/jsonValue" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "taskFailedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["status", "error"],
+              "properties": {
+                "status": { "const": "failed" },
+                "error": { "$ref": "common.schema.json#/$defs/rpcError" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "taskCancelledParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["status"],
+              "properties": { "status": { "const": "cancelled" } },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "toolStartedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["toolCallId", "toolName"],
+              "properties": {
+                "toolCallId": { "type": "string", "minLength": 1 },
+                "toolName": { "type": "string", "minLength": 1 },
+                "input": { "$ref": "common.schema.json#/$defs/jsonValue" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "toolOutputParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["toolCallId", "output"],
+              "properties": {
+                "toolCallId": { "type": "string", "minLength": 1 },
+                "output": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "toolCompletedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["toolCallId"],
+              "properties": {
+                "toolCallId": { "type": "string", "minLength": 1 },
+                "result": { "$ref": "common.schema.json#/$defs/jsonValue" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "toolFailedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["toolCallId", "error"],
+              "properties": {
+                "toolCallId": { "type": "string", "minLength": 1 },
+                "error": { "$ref": "common.schema.json#/$defs/rpcError" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "modelStartedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["modelCallId", "model"],
+              "properties": {
+                "modelCallId": { "type": "string", "minLength": 1 },
+                "model": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "modelOutputParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["modelCallId", "delta"],
+              "properties": {
+                "modelCallId": { "type": "string", "minLength": 1 },
+                "delta": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "modelCompletedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["modelCallId"],
+              "properties": {
+                "modelCallId": { "type": "string", "minLength": 1 },
+                "usage": {
+                  "type": "object",
+                  "required": ["inputTokens", "outputTokens"],
+                  "properties": {
+                    "inputTokens": { "type": "integer", "minimum": 0 },
+                    "outputTokens": { "type": "integer", "minimum": 0 }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "modelFailedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["modelCallId", "error"],
+              "properties": {
+                "modelCallId": { "type": "string", "minLength": 1 },
+                "error": { "$ref": "common.schema.json#/$defs/rpcError" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "agentStatusChangedParams": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "payload": {
+              "type": "object",
+              "required": ["status"],
+              "properties": {
+                "status": { "enum": ["idle", "busy", "paused", "offline"] },
+                "message": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

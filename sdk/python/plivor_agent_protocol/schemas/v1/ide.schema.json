@@ -1,0 +1,335 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://protocol.plivor.dev/v1/ide.schema.json",
+  "title": "Plivor IDE RPC DTOs",
+  "$defs": {
+    "documentPositionParams": {
+      "type": "object",
+      "required": ["documentUri", "position"],
+      "properties": {
+        "documentUri": { "type": "string", "minLength": 1 },
+        "position": { "$ref": "common.schema.json#/$defs/position" }
+      },
+      "additionalProperties": false
+    },
+    "ideGetActiveDocumentParams": { "$ref": "common.schema.json#/$defs/emptyObject" },
+    "ideGetActiveDocumentResult": {
+      "oneOf": [
+        { "$ref": "common.schema.json#/$defs/textDocument" },
+        { "type": "null" }
+      ]
+    },
+    "ideGetSelectionParams": { "$ref": "common.schema.json#/$defs/emptyObject" },
+    "ideGetSelectionResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["documentUri", "range", "text"],
+          "properties": {
+            "documentUri": { "type": "string", "minLength": 1 },
+            "range": { "$ref": "common.schema.json#/$defs/range" },
+            "text": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        { "type": "null" }
+      ]
+    },
+    "ideGetOpenDocumentsParams": { "$ref": "common.schema.json#/$defs/emptyObject" },
+    "ideGetOpenDocumentsResult": {
+      "type": "object",
+      "required": ["documents"],
+      "properties": {
+        "documents": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/textDocument" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ideApplyWorkspaceEditParams": {
+      "type": "object",
+      "required": ["edit"],
+      "properties": {
+        "edit": { "$ref": "common.schema.json#/$defs/workspaceEdit" },
+        "label": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "ideApplyWorkspaceEditResult": {
+      "type": "object",
+      "required": ["applied"],
+      "properties": {
+        "applied": { "type": "boolean" },
+        "failureReason": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "ideShowDiffParams": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "beforeUri": { "type": "string", "minLength": 1 },
+        "afterUri": { "type": "string", "minLength": 1 },
+        "beforeText": { "type": "string" },
+        "afterText": { "type": "string" }
+      },
+      "anyOf": [
+        { "required": ["beforeUri", "afterUri"] },
+        { "required": ["beforeText", "afterText"] }
+      ],
+      "additionalProperties": false
+    },
+    "ideShowDiffResult": {
+      "type": "object",
+      "required": ["shown"],
+      "properties": { "shown": { "type": "boolean" } },
+      "additionalProperties": false
+    },
+    "ideFindFilesParams": {
+      "type": "object",
+      "required": ["glob"],
+      "properties": {
+        "glob": { "type": "string", "minLength": 1 },
+        "excludeGlob": { "type": "string" },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 10000 }
+      },
+      "additionalProperties": false
+    },
+    "ideFindFilesResult": {
+      "type": "object",
+      "required": ["uris"],
+      "properties": {
+        "uris": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
+    "searchMatch": {
+      "type": "object",
+      "required": ["uri", "range", "preview"],
+      "properties": {
+        "uri": { "type": "string", "minLength": 1 },
+        "range": { "$ref": "common.schema.json#/$defs/range" },
+        "preview": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "ideSearchTextParams": {
+      "type": "object",
+      "required": ["query"],
+      "properties": {
+        "query": { "type": "string", "minLength": 1 },
+        "includeGlob": { "type": "string" },
+        "excludeGlob": { "type": "string" },
+        "caseSensitive": { "type": "boolean" },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 10000 }
+      },
+      "additionalProperties": false
+    },
+    "ideSearchTextResult": {
+      "type": "object",
+      "required": ["matches"],
+      "properties": {
+        "matches": { "type": "array", "items": { "$ref": "#/$defs/searchMatch" } }
+      },
+      "additionalProperties": false
+    },
+    "ideGetDefinitionParams": { "$ref": "#/$defs/documentPositionParams" },
+    "ideGetDefinitionResult": {
+      "type": "object",
+      "required": ["locations"],
+      "properties": {
+        "locations": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/location" } }
+      },
+      "additionalProperties": false
+    },
+    "ideGetReferencesParams": {
+      "type": "object",
+      "required": ["documentUri", "position"],
+      "properties": {
+        "documentUri": { "type": "string", "minLength": 1 },
+        "position": { "$ref": "common.schema.json#/$defs/position" },
+        "includeDeclaration": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "ideGetReferencesResult": { "$ref": "#/$defs/ideGetDefinitionResult" },
+    "symbol": {
+      "type": "object",
+      "required": ["name", "kind", "location"],
+      "properties": {
+        "name": { "type": "string" },
+        "kind": { "type": "string" },
+        "location": { "$ref": "common.schema.json#/$defs/location" },
+        "containerName": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "ideGetSymbolsParams": {
+      "type": "object",
+      "required": ["documentUri"],
+      "properties": { "documentUri": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "symbolsResult": {
+      "type": "object",
+      "required": ["symbols"],
+      "properties": {
+        "symbols": { "type": "array", "items": { "$ref": "#/$defs/symbol" } }
+      },
+      "additionalProperties": false
+    },
+    "ideGetSymbolsResult": { "$ref": "#/$defs/symbolsResult" },
+    "ideGetWorkspaceSymbolsParams": {
+      "type": "object",
+      "required": ["query"],
+      "properties": {
+        "query": { "type": "string" },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 10000 }
+      },
+      "additionalProperties": false
+    },
+    "ideGetWorkspaceSymbolsResult": { "$ref": "#/$defs/symbolsResult" },
+    "ideHoverParams": { "$ref": "#/$defs/documentPositionParams" },
+    "ideHoverResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["contents"],
+          "properties": {
+            "contents": { "type": "string" },
+            "range": { "$ref": "common.schema.json#/$defs/range" }
+          },
+          "additionalProperties": false
+        },
+        { "type": "null" }
+      ]
+    },
+    "ideRenameParams": {
+      "type": "object",
+      "required": ["documentUri", "position", "newName"],
+      "properties": {
+        "documentUri": { "type": "string", "minLength": 1 },
+        "position": { "$ref": "common.schema.json#/$defs/position" },
+        "newName": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "ideRenameResult": { "$ref": "common.schema.json#/$defs/workspaceEdit" },
+    "diagnostic": {
+      "type": "object",
+      "required": ["range", "severity", "message"],
+      "properties": {
+        "range": { "$ref": "common.schema.json#/$defs/range" },
+        "severity": { "enum": ["error", "warning", "information", "hint"] },
+        "message": { "type": "string" },
+        "source": { "type": "string" },
+        "code": { "oneOf": [{ "type": "string" }, { "type": "integer" }] }
+      },
+      "additionalProperties": false
+    },
+    "ideGetDiagnosticsParams": {
+      "type": "object",
+      "properties": { "documentUri": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "ideGetDiagnosticsResult": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["uri", "diagnostics"],
+            "properties": {
+              "uri": { "type": "string", "minLength": 1 },
+              "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ideTerminalCreateParams": {
+      "type": "object",
+      "properties": {
+        "cwd": { "type": "string" },
+        "shell": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "env": { "type": "object", "additionalProperties": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "ideTerminalCreateResult": {
+      "type": "object",
+      "required": ["terminalId"],
+      "properties": { "terminalId": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "ideTerminalWriteParams": {
+      "type": "object",
+      "required": ["terminalId", "data"],
+      "properties": {
+        "terminalId": { "type": "string", "minLength": 1 },
+        "data": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "ideTerminalWriteResult": {
+      "type": "object",
+      "required": ["accepted"],
+      "properties": { "accepted": { "type": "boolean" } },
+      "additionalProperties": false
+    },
+    "ideTerminalKillParams": {
+      "type": "object",
+      "required": ["terminalId"],
+      "properties": { "terminalId": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "ideTerminalKillResult": {
+      "type": "object",
+      "required": ["killed"],
+      "properties": { "killed": { "type": "boolean" } },
+      "additionalProperties": false
+    },
+    "gitStatusEntry": {
+      "type": "object",
+      "required": ["path", "indexStatus", "workingTreeStatus"],
+      "properties": {
+        "path": { "type": "string" },
+        "originalPath": { "type": "string" },
+        "indexStatus": { "type": "string" },
+        "workingTreeStatus": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "ideGitStatusParams": { "$ref": "common.schema.json#/$defs/emptyObject" },
+    "ideGitStatusResult": {
+      "type": "object",
+      "required": ["entries"],
+      "properties": {
+        "branch": { "type": "string" },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/gitStatusEntry" } }
+      },
+      "additionalProperties": false
+    },
+    "ideGitDiffParams": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "staged": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "ideGitDiffResult": {
+      "type": "object",
+      "required": ["diff"],
+      "properties": { "diff": { "type": "string" } },
+      "additionalProperties": false
+    }
+  }
+}
