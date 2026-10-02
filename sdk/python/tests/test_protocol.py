@@ -203,6 +203,65 @@ class ProtocolPeerTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ide.negotiated_protocol_version, "1.2")
         self.assertEqual(agent.negotiated_protocol_version, "1.2")
 
+    async def test_rejects_repeated_remote_initialization(self) -> None:
+        ide_channel, agent_channel = channel_pair()
+        agent = ProtocolPeer(agent_channel)
+        agent.register_initialize_handler(agent_version="0.1.0", supported_capabilities=[])
+
+        async def request(request_id: int) -> dict[str, Any]:
+            response: asyncio.Future[dict[str, Any]] = asyncio.get_running_loop().create_future()
+
+            def receive(message: str) -> None:
+                if not response.done():
+                    response.set_result(json.loads(message))
+
+            unsubscribe = ide_channel.on_message(receive)
+            try:
+                await ide_channel.send(json.dumps({
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "1.0",
+                        "clientName": "test",
+                        "clientVersion": "1.0.0",
+                        "capabilities": [],
+                    },
+                }))
+                return await asyncio.wait_for(response, timeout=1)
+            finally:
+                unsubscribe()
+
+        self.assertEqual((await request(1))["result"]["protocolVersion"], "1.0")
+        self.assertEqual((await request(2))["error"], {
+            "code": "INVALID_PARAMS",
+            "message": "Peer is already initialized",
+            "requestId": 2,
+        })
+        await agent.close()
+
+    async def test_preserves_zero_error_request_id(self) -> None:
+        ide_channel, agent_channel = channel_pair()
+        ide = ProtocolPeer(ide_channel)
+        agent = ProtocolPeer(agent_channel)
+        agent.register_initialize_handler(agent_version="0.1.0", supported_capabilities=[])
+
+        def fail(_params: object) -> object:
+            raise ProtocolError("INTERNAL_ERROR", "failed", request_id=0)
+
+        agent.register("agent.getTask", fail)
+        await ide.initialize({
+            "protocolVersion": "1.0",
+            "clientName": "test",
+            "clientVersion": "1.0.0",
+            "capabilities": [],
+        })
+
+        with self.assertRaises(ProtocolError) as raised:
+            await ide.call("agent.getTask", {"taskId": "task-1"})
+        self.assertEqual(raised.exception.request_id, 0)
+        await asyncio.gather(ide.close(), agent.close())
+
     async def test_event_order_guard(self) -> None:
         ide_channel, agent_channel = channel_pair()
         ide = ProtocolPeer(ide_channel)

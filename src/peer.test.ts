@@ -163,6 +163,32 @@ describe("ProtocolPeer", () => {
     expect(agent.negotiatedProtocolVersion).toBe("1.2");
   });
 
+  it("rejects repeated remote initialization", async () => {
+    const [ideChannel, agentChannel] = channelPair();
+    const agent = new ProtocolPeer(agentChannel);
+    agent.registerInitializeHandler({ agentVersion: "0.1.0", supportedCapabilities: [] });
+
+    const request = (id: number) => new Promise<Record<string, unknown>>((resolve) => {
+      const unsubscribe = ideChannel.onMessage((message) => {
+        unsubscribe();
+        resolve(JSON.parse(message) as Record<string, unknown>);
+      });
+      ideChannel.send(JSON.stringify({
+        jsonrpc: "2.0",
+        id,
+        method: "initialize",
+        params: { protocolVersion: "1.0", clientName: "test", clientVersion: "1.0.0", capabilities: [] }
+      }));
+    });
+
+    expect(await request(1)).toMatchObject({ id: 1, result: { protocolVersion: "1.0" } });
+    expect(await request(2)).toMatchObject({
+      id: 2,
+      error: { code: "INVALID_PARAMS", requestId: 2 }
+    });
+    await agent.close();
+  });
+
   it("rejects capabilities the client did not offer", async () => {
     const [ideChannel, rawAgentChannel] = channelPair();
     rawAgentChannel.onMessage((serialized) => {

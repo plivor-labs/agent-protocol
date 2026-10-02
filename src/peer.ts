@@ -222,6 +222,10 @@ export class ProtocolPeer {
       await this.sendFailure(message.id, new ProtocolError("METHOD_NOT_FOUND", `Unknown method ${message.method}`, undefined, message.id));
       return;
     }
+    if (message.method === "initialize" && this.initialized) {
+      await this.sendFailure(message.id, new ProtocolError("INVALID_PARAMS", "Peer is already initialized", undefined, message.id));
+      return;
+    }
     if (message.method !== "initialize") {
       if (!this.initialized) {
         await this.sendFailure(message.id, new ProtocolError("VERSION_MISMATCH", "initialize must complete before other RPC calls", undefined, message.id));

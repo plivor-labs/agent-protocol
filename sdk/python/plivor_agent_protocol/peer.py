@@ -227,6 +227,9 @@ class ProtocolPeer:
             await self._send_failure(request_id, ProtocolError("METHOD_NOT_FOUND", f"Unknown method {method}"))
             return
         rpc_method = cast(RpcMethod, method)
+        if rpc_method == "initialize" and self._initialized:
+            await self._send_failure(request_id, ProtocolError("INVALID_PARAMS", "Peer is already initialized"))
+            return
         if rpc_method != "initialize":
             if not self._initialized:
                 await self._send_failure(request_id, ProtocolError("VERSION_MISMATCH", "initialize must complete before other RPC calls"))
@@ -300,7 +303,8 @@ class ProtocolPeer:
         event_ids.add(event_id)
 
     async def _send_failure(self, request_id: RequestId, error: ProtocolError) -> None:
-        payload: dict[str, Any] = {"code": error.code, "message": str(error), "requestId": error.request_id or request_id}
+        correlated_request_id = request_id if error.request_id is None else error.request_id
+        payload: dict[str, Any] = {"code": error.code, "message": str(error), "requestId": correlated_request_id}
         if error.data is not None:
             payload["data"] = error.data
         await self._send({"jsonrpc": "2.0", "id": request_id, "error": payload})
