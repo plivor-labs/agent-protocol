@@ -100,6 +100,7 @@ class ProtocolPeerTest(unittest.IsolatedAsyncioTestCase):
             return {"taskId": "task-1", "status": "completed"}
 
         agent.register("agent.run", run)
+        self.assertIsNone(agent.negotiated_capabilities)
         initialized = await ide.initialize({
             "protocolVersion": "1.0",
             "clientName": "plivor-ide",
@@ -109,6 +110,7 @@ class ProtocolPeerTest(unittest.IsolatedAsyncioTestCase):
         result = await ide.call("agent.run", {"prompt": "Uppercase the selection"})
 
         self.assertEqual(initialized["supportedCapabilities"], ["editor.selection", "editor.showDiff"])
+        self.assertEqual(agent.negotiated_capabilities, frozenset({"editor.selection", "editor.showDiff"}))
         self.assertEqual(result, {"taskId": "task-1", "status": "completed"})
         self.assertEqual(trace, [
             "agent.run",

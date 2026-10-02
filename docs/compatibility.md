@@ -12,6 +12,8 @@
 
 Package versions use SemVer. Protocol `1.x` artifacts must continue to accept all valid `1.0` messages.
 
+Package `1.1.0` adds public negotiated-capability discovery. It does not change wire protocol `1.0`.
+
 ## Initialization
 
 `initialize` is the only RPC allowed before negotiation completes. The IDE sends its version and available capabilities. The Agent returns the selected version and intersection of capabilities it supports.
@@ -48,4 +50,3 @@ Error responses include `code`, `message`, and `requestId`; `data` is optional p
 Events are JSON-RPC notifications. `sequence` is strictly contiguous per `taskId` after the first observed event. `eventId` is globally unique within one connection. `timestamp` is RFC 3339 date-time text.
 
 Reconnect or resume starts a new connection. Consumers recover durable task state with `agent.getTask` or `agent.listTasks`; events are live progress, not the task database.
-

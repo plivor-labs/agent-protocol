@@ -9,6 +9,7 @@ Protocol version: `1.0`.
 - Canonical JSON Schema for every RPC request, response, and event.
 - TypeScript SDK for validation, request correlation, event handling, capability checks, and version negotiation.
 - Python SDK with the same behavior and schemas.
+- Public negotiated-capability discovery through `ProtocolPeer.negotiatedCapabilities` in TypeScript and `ProtocolPeer.negotiated_capabilities` in Python.
 - Node local transport for Unix Domain Sockets and Windows Named Pipes.
 - Python client transport for Unix Domain Sockets and Windows Named Pipes.
 - Cross-language milestone test: TypeScript IDE peer ↔ Python Agent peer.

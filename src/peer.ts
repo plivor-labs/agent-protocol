@@ -76,6 +76,10 @@ export class ProtocolPeer {
 
   public negotiatedProtocolVersion?: `${number}.${number}`;
 
+  get negotiatedCapabilities(): ReadonlySet<CapabilityId> | undefined {
+    return this.initialized ? new Set(this.capabilities) : undefined;
+  }
+
   constructor(private readonly channel: MessageChannel, options: PeerOptions = {}) {
     this.validator = options.validator ?? new ProtocolValidator();
     this.requestTimeoutMs = options.requestTimeoutMs ?? 30_000;

@@ -1,6 +1,6 @@
 {
   "name": "@plivor-labs/agent-protocol",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Versioned protocol boundary between Plivor IDE and Plivor Agent",
   "type": "module",
   "main": "./dist/src/index.js",

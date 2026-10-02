@@ -72,6 +72,10 @@ class ProtocolPeer:
         self.negotiated_protocol_version: str | None = None
         self._unsubscribe = channel.on_message(self._schedule_receive)
 
+    @property
+    def negotiated_capabilities(self) -> frozenset[CapabilityId] | None:
+        return frozenset(self._capabilities) if self._initialized else None
+
     def register(self, method: RpcMethod, handler: Handler) -> Callable[[], None]:
         if method == "initialize":
             raise ValueError("Use register_initialize_handler() for initialize")

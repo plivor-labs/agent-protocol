@@ -69,6 +69,7 @@ describe("ProtocolPeer", () => {
       return { taskId: "task-1", status: "completed" };
     });
 
+    expect(agent.negotiatedCapabilities).toBeUndefined();
     const initialized = await ide.initialize({
       protocolVersion: "1.0",
       clientName: "plivor-ide",
@@ -82,6 +83,7 @@ describe("ProtocolPeer", () => {
       agentVersion: "0.1.0",
       supportedCapabilities: ["editor.selection", "editor.showDiff"]
     });
+    expect(agent.negotiatedCapabilities).toEqual(new Set(["editor.selection", "editor.showDiff"]));
     expect(result).toEqual({ taskId: "task-1", status: "completed" });
     expect(trace).toEqual([
       "agent.run",
