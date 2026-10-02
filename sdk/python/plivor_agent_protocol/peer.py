@@ -197,8 +197,8 @@ class ProtocolPeer:
 
     async def _receive(self, serialized: str) -> None:
         try:
-            message = json.loads(serialized)
-        except json.JSONDecodeError as error:
+            message = json.loads(serialized, parse_constant=_reject_non_json_number)
+        except (json.JSONDecodeError, ValueError) as error:
             raise ProtocolError("INVALID_PARAMS", "Message is not valid JSON") from error
         if not _is_rpc_message(message):
             raise ProtocolError("INVALID_PARAMS", "Message is not a JSON-RPC 2.0 envelope")
@@ -310,7 +310,7 @@ class ProtocolPeer:
         await self._send({"jsonrpc": "2.0", "id": request_id, "error": payload})
 
     async def _send(self, message: object) -> None:
-        await self._channel.send(json.dumps(message, separators=(",", ":"), ensure_ascii=False))
+        await self._channel.send(json.dumps(message, separators=(",", ":"), ensure_ascii=False, allow_nan=False))
 
 
 def negotiate_version(client: str, agent: str) -> str:
@@ -349,3 +349,7 @@ def _is_rpc_message(value: object) -> bool:
 
 def _is_request_id(value: object) -> bool:
     return (isinstance(value, str) and bool(value)) or (isinstance(value, int) and not isinstance(value, bool))
+
+
+def _reject_non_json_number(value: str) -> object:
+    raise ValueError(f"{value} is not a JSON number")

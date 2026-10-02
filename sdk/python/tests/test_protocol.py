@@ -262,6 +262,34 @@ class ProtocolPeerTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(raised.exception.request_id, 0)
         await asyncio.gather(ide.close(), agent.close())
 
+    async def test_rejects_non_json_numbers_on_send_and_receive(self) -> None:
+        ide_channel, agent_channel = channel_pair()
+        received_error: asyncio.Future[Exception] = asyncio.get_running_loop().create_future()
+        ide = ProtocolPeer(ide_channel)
+        agent = ProtocolPeer(
+            agent_channel,
+            on_protocol_error=lambda error: received_error.set_result(error),
+        )
+        agent.register_initialize_handler(agent_version="0.1.0", supported_capabilities=[])
+        await ide.initialize({
+            "protocolVersion": "1.0",
+            "clientName": "test",
+            "clientVersion": "1.0.0",
+            "capabilities": [],
+        })
+
+        with self.assertRaisesRegex(ValueError, "finite JSON number"):
+            await ide.call("agent.run", {"prompt": "test", "metadata": {"value": float("nan")}})
+
+        await ide_channel.send(
+            '{"jsonrpc":"2.0","id":9,"method":"agent.run",'
+            '"params":{"prompt":"test","metadata":{"value":NaN}}}'
+        )
+        error = await asyncio.wait_for(received_error, timeout=1)
+        self.assertIsInstance(error, ProtocolError)
+        self.assertEqual(getattr(error, "code", None), "INVALID_PARAMS")
+        await asyncio.gather(ide.close(), agent.close())
+
     async def test_event_order_guard(self) -> None:
         ide_channel, agent_channel = channel_pair()
         ide = ProtocolPeer(ide_channel)

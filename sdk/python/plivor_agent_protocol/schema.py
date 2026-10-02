@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from importlib.resources import files
+import math
 from typing import Any
 
 from jsonschema import Draft202012Validator
@@ -15,11 +16,17 @@ _SCHEMA_PACKAGE = "plivor_agent_protocol.schemas.v1"
 
 
 class ValidationError(ValueError):
-    def __init__(self, target: str, error: JsonSchemaValidationError) -> None:
-        location = "/" + "/".join(str(part) for part in error.absolute_path)
-        super().__init__(f"Invalid {target}: {location} {error.message}")
+    def __init__(self, target: str, error: JsonSchemaValidationError | str) -> None:
+        if isinstance(error, str):
+            message = error
+            schema_error = None
+        else:
+            location = "/" + "/".join(str(part) for part in error.absolute_path)
+            message = f"{location} {error.message}"
+            schema_error = error
+        super().__init__(f"Invalid {target}: {message}")
         self.target = target
-        self.error = error
+        self.error = schema_error
 
 
 class ProtocolValidator:
@@ -72,6 +79,10 @@ class ProtocolValidator:
 
     def _validate(self, key: str, value: object, target: str) -> None:
         try:
+            _validate_json_value(value)
+        except (TypeError, ValueError) as error:
+            raise ValidationError(target, str(error)) from error
+        try:
             self._validators[key].validate(value)
         except JsonSchemaValidationError as error:
             raise ValidationError(target, error) from error
@@ -79,3 +90,22 @@ class ProtocolValidator:
 
 CURRENT_PROTOCOL_VERSION = ProtocolValidator().protocol_version
 
+
+def _validate_json_value(value: object, path: str = "/") -> None:
+    if value is None or isinstance(value, (bool, int, str)):
+        return
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError(f"{path} must contain a finite JSON number")
+        return
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            _validate_json_value(item, f"{path}{index}/")
+        return
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise TypeError(f"{path} object keys must be strings")
+            _validate_json_value(item, f"{path}{key}/")
+        return
+    raise TypeError(f"{path} contains non-JSON value {type(value).__name__}")
