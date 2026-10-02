@@ -8,11 +8,13 @@ export class SocketChannel implements MessageChannel {
   private buffer = "";
   private readonly maxMessageBytes: number;
   private readonly closed: Promise<void>;
+  private closeError?: Error;
 
   constructor(private readonly socket: Socket, options: SocketChannelOptions = {}) {
     this.maxMessageBytes = options.maxMessageBytes ?? 16 * 1024 * 1024;
     socket.setEncoding("utf8");
     socket.on("data", (chunk: string) => this.receive(chunk));
+    socket.once("error", (error) => { this.closeError = error; });
     this.closed = new Promise((resolve) => socket.once("close", resolve));
   }
 
@@ -30,13 +32,14 @@ export class SocketChannel implements MessageChannel {
     return () => this.listeners.delete(listener);
   }
 
-  close(): Promise<void> {
+  async close(): Promise<void> {
     if (!this.socket.destroyed) this.socket.end();
-    return this.closed;
+    await this.waitClosed();
   }
 
-  waitClosed(): Promise<void> {
-    return this.closed;
+  async waitClosed(): Promise<void> {
+    await this.closed;
+    if (this.closeError) throw this.closeError;
   }
 
   private receive(chunk: string): void {
