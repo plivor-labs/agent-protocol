@@ -369,6 +369,26 @@ class SchemaTest(unittest.TestCase):
         for event_name, fixture in fixtures["events"].items():
             validator.validate_event(event_name, fixture)
 
+    def test_shared_rfc3339_date_time_cases(self) -> None:
+        validator = ProtocolValidator()
+        fixture_path = Path(__file__).parents[3] / "fixtures" / "v1" / "conformance.json"
+        date_times = json.loads(fixture_path.read_text(encoding="utf-8"))["dateTimes"]
+
+        def value(timestamp: str) -> dict[str, object]:
+            return {
+                "taskId": "task-1",
+                "eventId": f"event-{timestamp}",
+                "sequence": 0,
+                "timestamp": timestamp,
+                "payload": {"status": "running"},
+            }
+
+        for timestamp in date_times["valid"]:
+            validator.validate_event("task.started", value(timestamp))
+        for timestamp in date_times["invalid"]:
+            with self.assertRaisesRegex(ValueError, "date-time"):
+                validator.validate_event("task.started", value(timestamp))
+
 
 if __name__ == "__main__":
     unittest.main()

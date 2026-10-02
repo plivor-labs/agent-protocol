@@ -48,7 +48,7 @@ export class ProtocolValidator {
 
   constructor() {
     const ajv = new Ajv2020({ allErrors: true, strict: true, strictRequired: false });
-    ajv.addFormat("date-time", (value: string) => value.includes("T") && Number.isFinite(Date.parse(value)));
+    ajv.addFormat("date-time", isRfc3339DateTime);
     for (const schema of [commonSchema, capabilitiesSchema, agentSchema, ideSchema, eventsSchema]) {
       ajv.addSchema(schema);
     }
@@ -88,4 +88,26 @@ export class ProtocolValidator {
     if (!validator) throw new ValidationError(target, undefined);
     if (!validator(value)) throw new ValidationError(target, validator.errors);
   }
+}
+
+const RFC3339_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:[Zz]|([+-])(\d{2}):(\d{2}))$/;
+
+function isRfc3339DateTime(value: string): boolean {
+  const match = RFC3339_DATE_TIME.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  const offsetHour = match[8] === undefined ? 0 : Number(match[8]);
+  const offsetMinute = match[9] === undefined ? 0 : Number(match[9]);
+  if (year < 1 || month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)) return false;
+  return hour <= 23 && minute <= 59 && second <= 60 && offsetHour <= 23 && offsetMinute <= 59;
+}
+
+function daysInMonth(year: number, month: number): number {
+  if (month === 2) return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28;
+  return [4, 6, 9, 11].includes(month) ? 30 : 31;
 }

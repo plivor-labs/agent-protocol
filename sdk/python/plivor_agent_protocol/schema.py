@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from importlib.resources import files
 import math
+import re
 from typing import Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 from referencing import Registry, Resource
 
@@ -13,6 +15,27 @@ from .types import ProtocolEvent, RpcMethod
 
 _SCHEMA_NAMES = ("common", "capabilities", "agent", "ide", "events")
 _SCHEMA_PACKAGE = "plivor_agent_protocol.schemas.v1"
+_RFC3339_DATE_TIME = re.compile(
+    r"^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:[Zz]|([+-])(\d{2}):(\d{2}))$"
+)
+_FORMAT_CHECKER = FormatChecker()
+
+
+@_FORMAT_CHECKER.checks("date-time")
+def _is_rfc3339_date_time(value: object) -> bool:
+    if not isinstance(value, str):
+        return True
+    match = _RFC3339_DATE_TIME.fullmatch(value)
+    if match is None:
+        return False
+    year, month, day, hour, minute, second = (int(part) for part in match.group(1, 2, 3, 4, 5, 6))
+    offset_hour = int(match.group(8) or 0)
+    offset_minute = int(match.group(9) or 0)
+    try:
+        date(year, month, day)
+    except ValueError:
+        return False
+    return hour <= 23 and minute <= 59 and second <= 60 and offset_hour <= 23 and offset_minute <= 59
 
 
 class ValidationError(ValueError):
@@ -51,7 +74,7 @@ class ProtocolValidator:
         return Draft202012Validator(
             {"$ref": f"https://protocol.plivor.dev/v1/{reference}"},
             registry=registry,
-            format_checker=Draft202012Validator.FORMAT_CHECKER,
+            format_checker=_FORMAT_CHECKER,
         )
 
     @property

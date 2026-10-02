@@ -31,4 +31,21 @@ describe("v1 conformance fixtures", () => {
   it("keeps public error code types aligned with schema", () => {
     expect(commonSchema.$defs.rpcError.properties.code.enum).toEqual(ERROR_CODES);
   });
+
+  it("enforces the shared RFC 3339 date-time cases", () => {
+    const validator = new ProtocolValidator();
+    const event = (timestamp: string) => ({
+      taskId: "task-1",
+      eventId: `event-${timestamp}`,
+      sequence: 0,
+      timestamp,
+      payload: { status: "running" }
+    });
+    for (const timestamp of fixtures.dateTimes.valid) {
+      expect(() => validator.validateEvent("task.started", event(timestamp))).not.toThrow();
+    }
+    for (const timestamp of fixtures.dateTimes.invalid) {
+      expect(() => validator.validateEvent("task.started", event(timestamp))).toThrow("date-time");
+    }
+  });
 });
