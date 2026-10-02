@@ -96,6 +96,37 @@ describe("ProtocolPeer", () => {
     await Promise.all([ide.close(), agent.close()]);
   });
 
+  it("correlates concurrent responses by request id", async () => {
+    const [ideChannel, agentChannel] = channelPair();
+    const ide = new ProtocolPeer(ideChannel);
+    const agent = new ProtocolPeer(agentChannel);
+    let releaseSlow!: () => void;
+    const slowGate = new Promise<void>((resolve) => { releaseSlow = resolve; });
+    const completionOrder: string[] = [];
+    const timestamp = "2026-10-02T00:00:00Z";
+    agent.registerInitializeHandler({ agentVersion: "0.1.0", supportedCapabilities: [] });
+    agent.register("agent.getTask", async ({ taskId }) => {
+      if (taskId === "slow") await slowGate;
+      return { taskId, status: "running", createdAt: timestamp, updatedAt: timestamp };
+    });
+    await ide.initialize({ protocolVersion: "1.0", clientName: "test", clientVersion: "1.0.0", capabilities: [] });
+
+    const slow = ide.call("agent.getTask", { taskId: "slow" }).then((result) => {
+      completionOrder.push(result.taskId);
+      return result;
+    });
+    const fast = ide.call("agent.getTask", { taskId: "fast" }).then((result) => {
+      completionOrder.push(result.taskId);
+      return result;
+    });
+
+    expect((await fast).taskId).toBe("fast");
+    releaseSlow();
+    expect((await slow).taskId).toBe("slow");
+    expect(completionOrder).toEqual(["fast", "slow"]);
+    await Promise.all([ide.close(), agent.close()]);
+  });
+
   it("rejects incompatible major versions", async () => {
     const [ideChannel, agentChannel] = channelPair();
     const ide = new ProtocolPeer(ideChannel);

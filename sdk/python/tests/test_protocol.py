@@ -121,6 +121,53 @@ class ProtocolPeerTest(unittest.IsolatedAsyncioTestCase):
         ])
         await asyncio.gather(ide.close(), agent.close())
 
+    async def test_correlates_concurrent_responses_by_request_id(self) -> None:
+        ide_channel, agent_channel = channel_pair()
+        ide = ProtocolPeer(ide_channel)
+        agent = ProtocolPeer(agent_channel)
+        slow_gate = asyncio.Event()
+        completion_order: list[str] = []
+        timestamp = "2026-10-02T00:00:00Z"
+        agent.register_initialize_handler(agent_version="0.1.0", supported_capabilities=[])
+
+        async def get_task(params: object) -> object:
+            assert isinstance(params, dict)
+            task_id = str(params["taskId"])
+            if task_id == "slow":
+                await slow_gate.wait()
+            return {
+                "taskId": task_id,
+                "status": "running",
+                "createdAt": timestamp,
+                "updatedAt": timestamp,
+            }
+
+        async def call(task_id: str) -> object:
+            result = await ide.call("agent.getTask", {"taskId": task_id})
+            assert isinstance(result, dict)
+            completion_order.append(str(result["taskId"]))
+            return result
+
+        agent.register("agent.getTask", get_task)
+        await ide.initialize({
+            "protocolVersion": "1.0",
+            "clientName": "test",
+            "clientVersion": "1.0.0",
+            "capabilities": [],
+        })
+
+        slow = asyncio.create_task(call("slow"))
+        fast = asyncio.create_task(call("fast"))
+        fast_result = await fast
+        assert isinstance(fast_result, dict)
+        self.assertEqual(fast_result["taskId"], "fast")
+        slow_gate.set()
+        slow_result = await slow
+        assert isinstance(slow_result, dict)
+        self.assertEqual(slow_result["taskId"], "slow")
+        self.assertEqual(completion_order, ["fast", "slow"])
+        await asyncio.gather(ide.close(), agent.close())
+
     async def test_version_and_capability_guards(self) -> None:
         ide_channel, agent_channel = channel_pair()
         ide = ProtocolPeer(ide_channel)
