@@ -175,6 +175,40 @@ class ProtocolPeerTest(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(ProtocolError, "Duplicate eventId event-3"):
             await agent.emit("task.completed", duplicate)
 
+    async def test_received_event_order_guard(self) -> None:
+        ide_channel, agent_channel = channel_pair()
+        error_reported: asyncio.Future[Exception] = asyncio.get_running_loop().create_future()
+
+        def report_error(error: Exception) -> None:
+            if not error_reported.done():
+                error_reported.set_result(error)
+
+        ide = ProtocolPeer(ide_channel, on_protocol_error=report_error)
+        agent = ProtocolPeer(agent_channel)
+        received: list[int] = []
+        agent.register_initialize_handler(agent_version="0.1.0", supported_capabilities=[])
+        ide.on("task.started", lambda params: received.append(params["sequence"]))
+        ide.on("task.completed", lambda params: received.append(params["sequence"]))
+        await ide.initialize({
+            "protocolVersion": "1.0",
+            "clientName": "test",
+            "clientVersion": "1.0.0",
+            "capabilities": [],
+        })
+
+        await agent.emit("task.started", event("task-1", 0, {"status": "running"}))
+        await agent_channel.send(json.dumps({
+            "jsonrpc": "2.0",
+            "method": "task.completed",
+            "params": event("task-1", 2, {"status": "completed"}),
+        }))
+
+        error = await asyncio.wait_for(error_reported, timeout=1)
+        self.assertIsInstance(error, ProtocolError)
+        self.assertEqual(getattr(error, "code", None), "INVALID_PARAMS")
+        self.assertEqual(received, [0])
+        await asyncio.gather(ide.close(), agent.close())
+
 
 class SchemaTest(unittest.TestCase):
     def test_manifest_covers_required_surface(self) -> None:

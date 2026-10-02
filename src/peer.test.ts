@@ -194,6 +194,30 @@ describe("ProtocolPeer", () => {
       eventId: "event-4"
     })).rejects.toThrow("Duplicate eventId event-4");
   });
+
+  it("rejects gaps in each task event sequence after receiving", async () => {
+    const [ideChannel, agentChannel] = channelPair();
+    let reportError!: (error: Error) => void;
+    const reportedError = new Promise<Error>((resolve) => { reportError = resolve; });
+    const ide = new ProtocolPeer(ideChannel, { onProtocolError: reportError });
+    const agent = new ProtocolPeer(agentChannel);
+    const received: number[] = [];
+    agent.registerInitializeHandler({ agentVersion: "0.1.0", supportedCapabilities: [] });
+    ide.on("task.started", ({ sequence }) => received.push(sequence));
+    ide.on("task.completed", ({ sequence }) => received.push(sequence));
+    await ide.initialize({ protocolVersion: "1.0", clientName: "test", clientVersion: "1.0.0", capabilities: [] });
+
+    await agent.emit("task.started", event("task-1", 0, { status: "running" }));
+    agentChannel.send(JSON.stringify({
+      jsonrpc: "2.0",
+      method: "task.completed",
+      params: event("task-1", 2, { status: "completed" })
+    }));
+
+    await expect(reportedError).resolves.toMatchObject({ code: "INVALID_PARAMS" });
+    expect(received).toEqual([0]);
+    await Promise.all([ide.close(), agent.close()]);
+  });
 });
 
 describe("schema manifest", () => {
