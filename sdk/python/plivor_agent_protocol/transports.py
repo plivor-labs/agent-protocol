@@ -55,6 +55,7 @@ class NamedPipeChannel(asyncio.Protocol):
         self._transport: asyncio.WriteTransport | None = None
         self._buffer = b""
         self._closed: asyncio.Future[None] = asyncio.get_running_loop().create_future()
+        self._close_error: Exception | None = None
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         self._transport = transport  # type: ignore[assignment]
@@ -64,21 +65,25 @@ class NamedPipeChannel(asyncio.Protocol):
         while b"\n" in self._buffer:
             line, self._buffer = self._buffer.split(b"\n", 1)
             if len(line) > self._max_message_bytes:
-                raise ValueError(f"Message exceeds {self._max_message_bytes} byte limit")
+                self._fail(ValueError(f"Message exceeds {self._max_message_bytes} byte limit"))
+                return
             if line:
-                message = line.decode("utf-8")
+                try:
+                    message = line.decode("utf-8")
+                except UnicodeDecodeError as error:
+                    self._fail(error)
+                    return
                 for listener in tuple(self._listeners):
                     listener(message)
         if len(self._buffer) > self._max_message_bytes:
-            raise ValueError(f"Message exceeds {self._max_message_bytes} byte limit")
+            self._fail(ValueError(f"Message exceeds {self._max_message_bytes} byte limit"))
 
     def connection_lost(self, error: Exception | None) -> None:
         if self._closed.done():
             return
-        if error is None:
-            self._closed.set_result(None)
-        else:
-            self._closed.set_exception(error)
+        if error is not None:
+            self._close_error = error
+        self._closed.set_result(None)
 
     async def send(self, message: str) -> None:
         data = message.encode("utf-8")
@@ -95,10 +100,19 @@ class NamedPipeChannel(asyncio.Protocol):
     async def close(self) -> None:
         if self._transport is not None:
             self._transport.close()
-        await self._closed
+        await self.wait_closed()
 
     async def wait_closed(self) -> None:
         await self._closed
+        if self._close_error is not None:
+            raise self._close_error
+
+    def _fail(self, error: Exception) -> None:
+        self._close_error = error
+        if self._transport is not None:
+            self._transport.abort()
+        if not self._closed.done():
+            self._closed.set_result(None)
 
 
 async def connect_local_socket(path: str, *, max_message_bytes: int = 16 * 1024 * 1024) -> StreamChannel | NamedPipeChannel:
