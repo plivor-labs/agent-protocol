@@ -23,7 +23,7 @@ npm install
 pyr install
 ```
 
-`npm` manages the TypeScript SDK toolchain. `pyr` manages the Python SDK environment. `.pyr/` and `pyr.lock` remain local because the current lock format selects platform-specific wheels while this repository supports Windows, Linux, and macOS.
+`npm` manages the TypeScript SDK toolchain. `pyr` manages the Python SDK environment. Commit `pyr.lock`; its target-aware format keeps separate resolved graphs for each Python version, ABI, operating system, and architecture. Do not commit `.pyr/`.
 
 ## Message flow
 

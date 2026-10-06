@@ -1,0 +1,94 @@
+version = 1
+source = "project"
+input_hash = "503921587048017549304e62fd0967af3dc0212d038666063e54efad8586a606"
+package = []
+editable = []
+
+[[target]]
+implementation = "cpython"
+python = "3.12.9"
+abi = "cpython-312;debug=0,free-threaded=0"
+platform = "win32"
+architecture = "x86_64"
+libc = ""
+
+[[target.package]]
+name = "attrs"
+version = "26.1.0"
+artifact = "attrs-26.1.0-py3-none-any.whl"
+sha256 = "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309"
+url = "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl"
+python_tag = "py3"
+abi_tag = "none"
+platform_tag = "any"
+architecture = "x86_64"
+dependencies = []
+
+[[target.package]]
+name = "jsonschema"
+version = "4.26.0"
+artifact = "jsonschema-4.26.0-py3-none-any.whl"
+sha256 = "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce"
+url = "https://files.pythonhosted.org/packages/69/90/f63fb5873511e014207a475e2bb4e8b2e570d655b00ac19a9a0ca0a385ee/jsonschema-4.26.0-py3-none-any.whl"
+python_tag = "py3"
+abi_tag = "none"
+platform_tag = "any"
+architecture = "x86_64"
+dependencies = [
+    "attrs",
+    "jsonschema-specifications",
+    "referencing",
+    "rpds-py",
+]
+
+[[target.package]]
+name = "jsonschema-specifications"
+version = "2025.9.1"
+artifact = "jsonschema_specifications-2025.9.1-py3-none-any.whl"
+sha256 = "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe"
+url = "https://files.pythonhosted.org/packages/41/45/1a4ed80516f02155c51f51e8cedb3c1902296743db0bbc66608a0db2814f/jsonschema_specifications-2025.9.1-py3-none-any.whl"
+python_tag = "py3"
+abi_tag = "none"
+platform_tag = "any"
+architecture = "x86_64"
+dependencies = ["referencing"]
+
+[[target.package]]
+name = "referencing"
+version = "0.37.0"
+artifact = "referencing-0.37.0-py3-none-any.whl"
+sha256 = "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231"
+url = "https://files.pythonhosted.org/packages/2c/58/ca301544e1fa93ed4f80d724bf5b194f6e4b945841c5bfd555878eea9fcb/referencing-0.37.0-py3-none-any.whl"
+python_tag = "py3"
+abi_tag = "none"
+platform_tag = "any"
+architecture = "x86_64"
+dependencies = [
+    "attrs",
+    "rpds-py",
+    "typing-extensions",
+]
+
+[[target.package]]
+name = "rpds-py"
+version = "2026.9.1"
+artifact = "rpds_py-2026.9.1-cp312-cp312-win_amd64.whl"
+sha256 = "5ce8943f79c2210f7abcc28e86367b03b28d95027fd01c46d2472373ae70c86f"
+url = "https://files.pythonhosted.org/packages/1c/84/1700cc748d0eaa747486e4e82882d2575224e6e9a3148df583058850c629/rpds_py-2026.9.1-cp312-cp312-win_amd64.whl"
+python_tag = "cp312"
+abi_tag = "cp312"
+platform_tag = "win_amd64"
+architecture = "x86_64"
+dependencies = []
+
+[[target.package]]
+name = "typing_extensions"
+version = "4.16.0"
+artifact = "typing_extensions-4.16.0-py3-none-any.whl"
+sha256 = "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+url = "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl"
+python_tag = "py3"
+abi_tag = "none"
+platform_tag = "any"
+architecture = "x86_64"
+dependencies = []
