@@ -1,11 +1,28 @@
 {
   "name": "@plivor-labs/agent-protocol",
-  "version": "1.1.0",
+  "version": "0.1.0",
   "description": "Versioned protocol boundary between Plivor IDE and Plivor Agent",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plivor-labs/agent-protocol.git"
+  },
+  "bugs": {
+    "url": "https://github.com/plivor-labs/agent-protocol/issues"
+  },
+  "homepage": "https://github.com/plivor-labs/agent-protocol#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
-  "files": ["dist", "docs", "proposals", "README.md"],
+  "files": [
+    "dist/src",
+    "dist/sdk/python/plivor_agent_protocol/schemas",
+    "docs",
+    "proposals",
+    "README.md"
+  ],
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -23,6 +40,7 @@
     "type-check": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:python": "python -m unittest discover -s sdk/python/tests -v",
+    "check:release-version": "node scripts/check-release-version.mjs",
     "verify": "npm run type-check && npm test && npm run test:python && npm run build"
   },
   "dependencies": {
@@ -31,11 +49,11 @@
   "devDependencies": {
     "@types/node": "^22.15.3",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.3"
+    "vitest": "^5.0.3"
   },
   "engines": {
     "node": ">=22"
   },
   "license": "UNLICENSED",
-  "packageManager": "npm@10.9.2"
+  "packageManager": "npm@11.6.2"
 }

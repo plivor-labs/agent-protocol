@@ -10,9 +10,9 @@
 - Optional fields, new methods, new events, and new capability identifiers may increment minor.
 - Existing field meaning never changes within a major version.
 
-Package versions use SemVer. Protocol `1.x` artifacts must continue to accept all valid `1.0` messages.
+Package versions use SemVer independently from `protocolVersion`. Pre-1.0 package releases may evolve while wire protocol `1.0` remains compatible.
 
-Package `1.1.0` adds public negotiated-capability discovery. It does not change wire protocol `1.0`.
+Package `0.1.0` exposes public negotiated-capability discovery. It does not change wire protocol `1.0`.
 
 ## Initialization
 

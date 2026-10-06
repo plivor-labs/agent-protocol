@@ -4,13 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plivor-agent-protocol"
-version = "1.1.0"
+version = "0.1.0"
 description = "Versioned protocol boundary between Plivor IDE and Plivor Agent"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["jsonschema>=4.23"]
 license = "LicenseRef-Proprietary"
 authors = [{ name = "Plivor Labs" }]
+
+[project.urls]
+Repository = "https://github.com/plivor-labs/agent-protocol"
+Issues = "https://github.com/plivor-labs/agent-protocol/issues"
 
 [tool.setuptools]
 package-dir = { "" = "sdk/python" }

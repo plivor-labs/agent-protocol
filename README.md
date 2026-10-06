@@ -16,6 +16,15 @@ Protocol version: `1.0`.
 
 Concrete transport code is separate from `ProtocolPeer`. WebSocket and TCP adapters can be added without changing protocol DTOs.
 
+## Install
+
+```bash
+npm install
+pyr install
+```
+
+`npm` manages the TypeScript SDK toolchain. `pyr` manages the Python SDK environment. `.pyr/` and `pyr.lock` remain local because the current lock format selects platform-specific wheels while this repository supports Windows, Linux, and macOS.
+
 ## Message flow
 
 ```mermaid
@@ -83,11 +92,23 @@ await agent.wait_closed()
 ## Verify
 
 ```bash
-npm install
-npm run verify
+# Linux/macOS
+pyr run npm run verify
+
+# Windows
+pyr run npm.cmd run verify
 ```
 
 `npm run verify` performs TypeScript type checking, TypeScript tests, Python tests, the real cross-language local-transport flow, and the TypeScript build.
+
+## Release
+
+Package version and wire `protocolVersion` are independent. The first package release is `0.1.0`; wire protocol remains `1.0`.
+
+1. For the first npm release, add a granular publish token as repository secret `NPM_TOKEN`.
+2. Configure a pending PyPI Trusted Publisher for project `plivor-agent-protocol`, owner `plivor-labs`, repository `agent-protocol`, and workflow `release.yml`.
+3. Push tag `v0.1.0`. The workflow verifies Windows, Linux, and macOS, publishes npm and PyPI packages, then creates the GitHub release.
+4. After npm creates `@plivor-labs/agent-protocol`, configure its Trusted Publisher for `plivor-labs/agent-protocol` and `release.yml`, then remove `NPM_TOKEN`.
 
 ## Scope
 
